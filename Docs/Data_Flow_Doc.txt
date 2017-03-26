@@ -1,5 +1,5 @@
 Data Flow:
-1) The measuremennt processor/matlab simulator is generating the FUSION .txt file:
+1) The measurement processor/matlab simulator is generating the FUSION .txt file:
 	"data/obj_pose-laser-radar-synthetic-ukf-input.txt";
 	OR
 	"../matlab_examples/obj_pose-laser-radar-synthetic-ukf-input.txt";

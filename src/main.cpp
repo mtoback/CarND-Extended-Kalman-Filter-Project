@@ -13,6 +13,10 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
+/**
+ * should have three arguments
+ * (two actually, but first is always program name)
+ */
 void check_arguments(int argc, char* argv[]) {
   string usage_instructions = "Usage instructions: ";
   usage_instructions += argv[0];
@@ -36,6 +40,10 @@ void check_arguments(int argc, char* argv[]) {
   }
 }
 
+/**
+ * exit program if either input or output files are not
+ * open
+ */
 void check_files(ifstream& in_file, string& in_name,
                  ofstream& out_file, string& out_name) {
   if (!in_file.is_open()) {
@@ -49,8 +57,16 @@ void check_files(ifstream& in_file, string& in_name,
   }
 }
 
+/**
+ * Driver for project
+ * Inputs: input_file_name output_file_name
+ * for formats see Docs/Input_Output File Format.txt
+ */
 int main(int argc, char* argv[]) {
 
+  /**
+   * validate the arguments then open the input and output files
+   */
   check_arguments(argc, argv);
 
   string in_file_name_ = argv[1];
@@ -74,43 +90,57 @@ int main(int argc, char* argv[]) {
     MeasurementPackage meas_package;
     GroundTruthPackage gt_package;
     istringstream iss(line);
-    long long timestamp;
+    /**
+     * the original file had: "long long timestamp;"
+     * I am assuming that was a typo
+     */
+    long timestamp;
 
-    // reads first element from the current line
+    /**
+     * Read in the first element, which is sensor type
+     * The format of the line is different depending on
+     * whether it is L(ASER) or R(ADAR) input
+     */
     iss >> sensor_type;
     if (sensor_type.compare("L") == 0) {
       // LASER MEASUREMENT
-
-      // read measurements at this timestamp
+      // read in x, y, timestamp
       meas_package.sensor_type_ = MeasurementPackage::LASER;
+      float meas_px;
+      float meas_py;
+      iss >> meas_px;
+      iss >> meas_py;
       meas_package.raw_measurements_ = VectorXd(2);
-      float x;
-      float y;
-      iss >> x;
-      iss >> y;
-      meas_package.raw_measurements_ << x, y;
+      meas_package.raw_measurements_ << meas_px, meas_py;
       iss >> timestamp;
       meas_package.timestamp_ = timestamp;
       measurement_pack_list.push_back(meas_package);
     } else if (sensor_type.compare("R") == 0) {
       // RADAR MEASUREMENT
 
-      // read measurements at this timestamp
+      /**
+       * read in rho (distance), phi (angle), and rho_dot (velocity along the line)
+       * and timestamp
+       */
       meas_package.sensor_type_ = MeasurementPackage::RADAR;
       meas_package.raw_measurements_ = VectorXd(3);
-      float ro;
-      float phi;
-      float ro_dot;
-      iss >> ro;
-      iss >> phi;
-      iss >> ro_dot;
-      meas_package.raw_measurements_ << ro, phi, ro_dot;
+      float meas_rho;
+      float meas_phi;
+      float meas_rho_dot;
+      iss >> meas_rho;
+      iss >> meas_phi;
+      iss >> meas_rho_dot;
+      meas_package.raw_measurements_ << meas_rho, meas_phi, meas_rho_dot;
       iss >> timestamp;
       meas_package.timestamp_ = timestamp;
       measurement_pack_list.push_back(meas_package);
     }
 
-    // read ground truth data to compare later
+    /**
+     * the rest of the line contains ground truth data
+     * position (x, y) and velocity (vx, vy)
+     * append ground truth data to measurement compare later
+     */
     float x_gt;
     float y_gt;
     float vx_gt;
@@ -127,7 +157,10 @@ int main(int argc, char* argv[]) {
   // Create a Fusion EKF instance
   FusionEKF fusionEKF;
 
-  // used to compute the RMSE later
+  /**
+   * used to compute the RMSE later by comparing the EKF calculated estimations
+   * with the ground truth input values
+   */
   vector<VectorXd> estimations;
   vector<VectorXd> ground_truth;
 
@@ -157,7 +190,7 @@ int main(int argc, char* argv[]) {
       out_file_ << ro * sin(phi) << "\t"; // ps_meas
     }
 
-    // output the ground truth packages
+    // output the ground truth values
     out_file_ << gt_pack_list[k].gt_values_(0) << "\t";
     out_file_ << gt_pack_list[k].gt_values_(1) << "\t";
     out_file_ << gt_pack_list[k].gt_values_(2) << "\t";
