@@ -172,6 +172,8 @@ int main(int argc, char* argv[]) {
     fusionEKF.ProcessMeasurement(measurement_pack_list[k]);
 
     // output the estimation
+    cout << "estimation:" << endl;
+    cout << fusionEKF.ekf_.x_ << endl;
     out_file_ << fusionEKF.ekf_.x_(0) << "\t";
     out_file_ << fusionEKF.ekf_.x_(1) << "\t";
     out_file_ << fusionEKF.ekf_.x_(2) << "\t";
