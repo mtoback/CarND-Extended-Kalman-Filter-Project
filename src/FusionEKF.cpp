@@ -25,14 +25,12 @@ FusionEKF::FusionEKF() {
 
   // initializing matrices
   // R is the observation noise/covariance
-  R_laser_ = MatrixXd(4, 4);
+  R_laser_ = MatrixXd(2, 2);
   R_radar_ = MatrixXd(3, 3);
 
   //measurement covariance matrix - laser
-  R_laser_ << 0.0225, 0, 0, 0,
-        0, 0.0225, 0, 0,
-		0, 0,      0, 0,
-		0, 0,      0, 0;
+  R_laser_ << 0.0225, 0,
+        0, 0.0225;
 
   //measurement covariance matrix - radar
   R_radar_ << 0.09, 0, 0,
@@ -49,7 +47,7 @@ FusionEKF::FusionEKF() {
    * and velocity along the distance line) vs [x, y, vx, vy] to convert it
    * to an estimated linear form
    */
-  H_laser_ = MatrixXd(4, 4);
+  H_laser_ = MatrixXd(2, 4);
   /**
   H_laser_ << 1.0, 0,0, 0.0, 0.0,
 		      0.0, 1.0, 0.0, 0.0;
@@ -62,14 +60,6 @@ FusionEKF::FusionEKF() {
   H_laser_(1,1) = 1.0;
   H_laser_(1,2) = 0.0;
   H_laser_(1,3) = 0.0;
-  H_laser_(2,0) = 0.0;
-  H_laser_(2,1) = 0.0;
-  H_laser_(2,2) = 0.0;
-  H_laser_(2,3) = 0.0;
-  H_laser_(3,0) = 0.0;
-  H_laser_(3,1) = 0.0;
-  H_laser_(3,2) = 0.0;
-  H_laser_(3,3) = 0.0;
   ekf_.H_ = H_laser_;
 
 
@@ -191,8 +181,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
     // Radar updates
-	VectorXd z = VectorXd(4);
-	z << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 0, 0;
+	VectorXd z = VectorXd(2);
+	z << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1];
 	ekf_.Update(z);
   } else {
     // Laser updates

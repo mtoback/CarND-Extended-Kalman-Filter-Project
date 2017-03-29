@@ -11,3 +11,5 @@ build/
 .cproject
 .project
 .settings/**
+
+output.txt
