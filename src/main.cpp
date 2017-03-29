@@ -112,6 +112,8 @@ int main(int argc, char* argv[]) {
       iss >> meas_py;
       meas_package.raw_measurements_ = VectorXd(2);
       meas_package.raw_measurements_ << meas_px, meas_py;
+      cout << "sensor in: " << meas_package.sensor_type_ << endl;
+      cout << "data in: " << meas_package.raw_measurements_ << endl;
       iss >> timestamp;
       meas_package.timestamp_ = timestamp;
       measurement_pack_list.push_back(meas_package);
@@ -131,6 +133,8 @@ int main(int argc, char* argv[]) {
       iss >> meas_phi;
       iss >> meas_rho_dot;
       meas_package.raw_measurements_ << meas_rho, meas_phi, meas_rho_dot;
+      cout << "sensor in: " << meas_package.sensor_type_ << endl;
+      cout << "data in: " << meas_package.raw_measurements_ << endl;
       iss >> timestamp;
       meas_package.timestamp_ = timestamp;
       measurement_pack_list.push_back(meas_package);
@@ -182,12 +186,16 @@ int main(int argc, char* argv[]) {
     // output the measurements
     if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::LASER) {
       // output the estimation
+      cout << "sensor out: " << measurement_pack_list[k].sensor_type_ << endl;
+      cout << "data out: " << measurement_pack_list[k].raw_measurements_ << endl;
       out_file_ << measurement_pack_list[k].raw_measurements_(0) << "\t";
       out_file_ << measurement_pack_list[k].raw_measurements_(1) << "\t";
     } else if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::RADAR) {
       // output the estimation in the cartesian coordinates
       float ro = measurement_pack_list[k].raw_measurements_(0);
       float phi = measurement_pack_list[k].raw_measurements_(1);
+      cout << "sensor out: " << measurement_pack_list[k].sensor_type_ << endl;
+      cout << "data out: " << measurement_pack_list[k].raw_measurements_ << endl;
       out_file_ << ro * cos(phi) << "\t"; // p1_meas
       out_file_ << ro * sin(phi) << "\t"; // ps_meas
     }

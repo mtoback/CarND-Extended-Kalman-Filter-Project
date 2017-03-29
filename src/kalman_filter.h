@@ -20,8 +20,9 @@ public:
   // measurement matrix
   Eigen::MatrixXd H_;
 
-  // measurement covariance matrix
-  Eigen::MatrixXd R_;
+  // measurement covariance matrices
+  Eigen::MatrixXd R_Laser_;
+  Eigen::MatrixXd R_Radar_;
 
   /**
    * Constructor
@@ -43,7 +44,7 @@ public:
    * @param Q_in Process covariance matrix
    */
   void Init(Eigen::VectorXd &x_in, Eigen::MatrixXd &P_in, Eigen::MatrixXd &F_in,
-      Eigen::MatrixXd &H_in, Eigen::MatrixXd &R_in, Eigen::MatrixXd &Q_in);
+      Eigen::MatrixXd &H_in, Eigen::MatrixXd &R_Radar_in, Eigen::MatrixXd &R_Laser_in, Eigen::MatrixXd &Q_in);
 
   /**
    * Prediction Predicts the state and the state covariance
