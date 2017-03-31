@@ -2,7 +2,7 @@
 #include "tools.h"
 #include "Eigen/Dense"
 #include <iostream>
-
+#include <stdlib.h>
 using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -27,15 +27,6 @@ FusionEKF::FusionEKF() {
   // R is the observation noise/covariance
   R_laser_ = MatrixXd(2, 2);
   R_radar_ = MatrixXd(3, 3);
-
-  //measurement covariance matrix - laser
-  R_laser_ << 0.0225, 0,
-        0, 0.0225;
-
-  //measurement covariance matrix - radar
-  R_radar_ << 0.09, 0, 0,
-        0, 0.0009, 0,
-        0, 0, 0.09;
 
   /**
    * H provides the coefficients to compare the current position
@@ -67,6 +58,14 @@ FusionEKF::FusionEKF() {
    * * TODO:
     * Set the process and measurement noises
   */
+  //measurement covariance matrix - laser
+  R_laser_ << 0.0225, 0,
+        0, 0.0225;
+
+  //measurement covariance matrix - radar
+  R_radar_ << 0.09, 0, 0,
+        0, 0.0009, 0,
+        0, 0, 0.09;
 	//the initial transition matrix F_
     ekf_.F_ = MatrixXd(4, 4);
 	ekf_.F_ << 1, 0, 1, 0,
@@ -82,8 +81,8 @@ FusionEKF::FusionEKF() {
 			  0, 0, 0, 1000;
    ekf_.R_Laser_ = R_laser_;
    ekf_.R_Radar_ = R_radar_;
-   noise_ax_ = 9;
-   noise_ay_ = 9;
+   noise_ax_ = 5;
+   noise_ay_ = 5;
 
 }
 
@@ -150,7 +149,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
+    // if x and y values are 0, set to 0.1
+    if ( abs(ekf_.x_[0]) < 0.1 && abs(ekf_.x_[1]) < 0.1)
+    {
+    	ekf_.x_[0] = 0.1;
+    	ekf_.x_[1] = 0.1;
 
+    }
 	//compute the time elapsed between the current and previous measurements
 	float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;	//dt - expressed in seconds
 	previous_timestamp_ = measurement_pack.timestamp_;
@@ -160,13 +165,18 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 	ekf_.F_(1, 3) = dt;
 	//2. Set the process covariance matrix Q
 	ekf_.Q_ = MatrixXd(4, 4);
-	ekf_.Q_ << noise_ax_*pow(dt,4)/4.0, 0, noise_ax_*pow(dt,3)/2.0, 0,
-			  0, noise_ay_*pow(dt,4)/4.0, 0, noise_ay_*pow(dt,3)/2.0,
-			  noise_ax_*pow(dt,3)/2.0, 0, noise_ax_*pow(dt,2), 0,
-			  0, noise_ay_*pow(dt,3)/2.0, 0, noise_ay_*pow(dt,2);
-
-  ekf_.Predict();
-
+	float dt2 = pow(dt,2);
+	float dt3 = pow(dt,3);
+	float dt4 = pow(dt,4);
+	ekf_.Q_ << noise_ax_*dt4/4.0, 0, noise_ax_*dt3/2.0, 0,
+			  0, noise_ay_*dt4/4.0, 0, noise_ay_*dt3/2.0,
+			  noise_ax_*dt3/2.0, 0, noise_ax_*dt2, 0,
+			  0, noise_ay_*dt3/2.0, 0, noise_ay_*dt2;
+  // if dt is too small, don't do a prediction or you could get nonsensical results
+  if ( dt > 0.001)
+  {
+      ekf_.Predict();
+  }
   /*****************************************************************************
    *  Update
    ****************************************************************************/
@@ -180,12 +190,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   cout << "data out: " << measurement_pack.raw_measurements_ << endl;
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-    // Radar updates
+    // Laser/Lidar updates
 	VectorXd z = VectorXd(2);
 	z << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1];
 	ekf_.Update(z);
   } else {
-    // Laser updates
+    // Radar updates
 		VectorXd z = VectorXd(3);
 		z << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1],
 				measurement_pack.raw_measurements_[2];
