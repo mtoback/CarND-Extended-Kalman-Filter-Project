@@ -70,11 +70,16 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 	float py = x_[1];
 	float vx = x_[2];
 	float vy = x_[3];
+	VectorXd z_pred(3);
 	float c1 = sqrt(pow(px,2) + pow(py,2));
 	float c2 = atan2(py,px);
 	float c3 = (px*vx + py*vy)/c1;
-	VectorXd z_pred(3);
-	z_pred << c1, c2, c3;
+	if ( c1 < 0.001 )
+	   z_pred << 0.0, 0.0, 0.0;
+	else
+	{
+		z_pred << c1, c2, c3;
+	}
 	VectorXd y = z - z_pred;
 	// use the last state value to calculate jacobian, which is then used to update S, P and K
 	MatrixXd Hj = tools.CalculateJacobian(x_);

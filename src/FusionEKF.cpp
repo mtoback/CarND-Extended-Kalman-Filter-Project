@@ -81,8 +81,8 @@ FusionEKF::FusionEKF() {
 			  0, 0, 0, 1000;
    ekf_.R_Laser_ = R_laser_;
    ekf_.R_Radar_ = R_radar_;
-   noise_ax_ = 5;
-   noise_ay_ = 5;
+   noise_ax_ = 9;
+   noise_ay_ = 9;
 
 }
 
@@ -119,7 +119,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     	  z << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1],
     			  measurement_pack.raw_measurements_[2];
 		  cout << ekf_.x_ << endl;
-		  ekf_.x_ = z.transpose() * Hj_;
+		  ekf_.x_ << z[0]*cos(z[1]), z[0]*sin(z[1]), 0.0, 0.0;
 		  cout << ekf_.x_ << endl;
 		  cout << endl;
     }
@@ -132,7 +132,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
 		previous_timestamp_ = measurement_pack.timestamp_;
     }
+    // if x and y values are 0, set to 0.1
+	if ( abs(ekf_.x_[0]) < 0.1 && abs(ekf_.x_[1]) < 0.1)
+	{
+		ekf_.x_[0] = 0.1;
+		ekf_.x_[1] = 0.1;
 
+	}
     // done initializing, no need to predict or update
     is_initialized_ = true;
     return;
